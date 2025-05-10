@@ -6,7 +6,7 @@ Este proyecto implementa un **afinador digital para guitarra** usando el microco
 
 ##  Funcionalidades
 
-- Lectura de señal analógica mediante interrupciones del timer.
+- Lectura de señal analógica mediante uos de Hardware e interrupciones del timer.
 - Cálculo de frecuencia en tiempo real.
 - Comparación con notas estándar para afinación de guitarra.
 - Visualización de la nota detectada en un display.
