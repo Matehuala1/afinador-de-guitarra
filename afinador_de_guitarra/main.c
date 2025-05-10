@@ -180,8 +180,9 @@ __interrupt void TIMER0_A0_ISR(void){
         if (periodo > 0.000000)
         frecuencia = 1 / periodo;       // Calcular frecuencia
         cuenta = 0;                     // Reiniciar contador
+        nueva_medida = 1;               // Indicar que hay una nueva medida disponible
+
     }
     estado_anterior = estado_actual;    // Guardar el estado actual para la siguiente interrupcion
     cuenta++;                           // Incrementar el contador
-    nueva_medida = 1;                   // Indicar que hay una nueva medida disponible
 }
