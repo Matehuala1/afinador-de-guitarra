@@ -1,6 +1,28 @@
+/**
+ * @file main.c
+ * @brief Afinador de guitarra para MSP430.
+ *
+ * Este programa implementa un afinador de guitarra utilizando el microcontrolador MSP430.
+ * Mide la frecuencia de la se√±al de entrada (cuerda de guitarra), detecta la nota musical m√°s cercana,
+ * la muestra en un display y enciende LEDs indicadores para mostrar si la afinaci√≥n est√° baja, precisa o alta.
+ *
+ * Funcionalidades principales:
+ * - Configuraci√≥n de pines y temporizador.
+ * - Medici√≥n de frecuencia de la se√±al de entrada.
+ * - Detecci√≥n de la nota musical m√°s cercana.
+ * - Indicaci√≥n visual de la nota y del estado de afinaci√≥n mediante LEDs.
+ *
+ * Notas soportadas: E2 (82 Hz), A (110 Hz), D (147 Hz), G (196 Hz), B (247 Hz), E4 (333 Hz).
+ *
+ * @author Juan Gilberto Prado Matehuala
+ * @author Jonathan Brown Moreno
+ * @author Jorge Eduardo Davila Garcia
+ * @date 10/05/2025
+ */
+
 #include <msp430.h> 
 
-// EnumeraciÛn para representar las notas musicales que se afinan
+// Enumeracion para representar las notas musicales que se afinan
 typedef enum {
     E2, // 82 Hz
     A, // 110 Hz
@@ -26,7 +48,7 @@ Notas tablaNotas[] = {
     {E4, 333},
 };
 
-// DeclaraciÛn de funciones
+// DeclaraciÔøΩn de funciones
 void confg_pines(void);     // Configura los pines de lectura
 void confg_relog(void);           // Configura el temporizador
 
@@ -34,12 +56,8 @@ void mostrar_nota(TiposNotas nota);
 TiposNotas detectarNota(unsigned int f);
 void indicarAfinacion(unsigned int freqEntrada, Notas notaRef);
 
-
-
-
-
 // Variables globales
-float factor = 0.000004;          // Factor de conversiÛn de cuentas a segundos (asume 250 kHz SMCLK)
+float factor = 0.000004;          // Factor de conversiÔøΩn de cuentas a segundos (asume 250 kHz SMCLK)
 unsigned int frecuencia = 0;      // Resultado de la frecuencia
 unsigned char estado_anterior = 1; // Estado anterior del pin
 unsigned int cuenta = 0;          // Contador de ciclos del timer
@@ -53,23 +71,19 @@ int main(void)
     confg_pines();
     confg_relog();
 
-    P4DIR = 0x01;                 // Pin para salida de observaciÛn en osciloscopio
-    P4OUT = 0x00;
-
     __enable_interrupt();         // Habilitar interrupciones globales
 
     while(1){
         if (nueva_medida) {
             nueva_medida = 0;
 
-
-            // Detectar la nota m·s cercana
+            // Detectar la nota mas cercana
             TiposNotas nota = detectarNota(frecuencia);
 
             // Mostrar la nota en display
             mostrar_nota(nota);
 
-            // Indicar si la afinaciÛn est· baja, precisa o alta
+            // Indicar si la afinacion esta baja, precisa o alta
             indicarAfinacion(frecuencia, tablaNotas[nota]);
         }
     }
@@ -84,14 +98,9 @@ void confg_pines(void){
     P6REN |= 0x01;    // Habilitar resistencia en P6.0
     P6OUT |= 0x01;    // Configurar como pull-up
 
-    //led indicador de lectura
-    P1DIR = 0x01;     // LED como salida
-    P1OUT = ~0x01;     // LED apagado inicialmente
-
     //leds display
     P2DIR = 0xFD;     // LEDs del display 2.0, 2.2 2.3 2.4 2.5 2.6 2.7   FR = 1111 1101
     P2OUT = ~0xFD;     // LEDs apagados inicialmente
-
 
     //leds indicadores
     P3DIR = 0x1F;     // LEDs indicadores   3.0 3.1 3.2 3.3 3.4
@@ -100,12 +109,10 @@ void confg_pines(void){
 }
 
 void confg_relog(void){
-    TA0CCTL0 = CCIE;                         // Habilitar interrupciÛn CCR0
+    TA0CCTL0 = CCIE;                         // Habilitar interrupcion CCR0
     TA0CCR0 = 1000 - 1;                      // Cuenta hasta 999
-    TA0CTL = TASSEL_2 | MC_1 | ID_0 | TACLR; // SMCLK, modo up, sin divisiÛn
+    TA0CTL = TASSEL_2 | MC_1 | ID_0 | TACLR; // SMCLK, modo up, sin division
 }
-
-
 
 void mostrar_nota(TiposNotas nota) {
     const unsigned char segmentos[] = {
@@ -115,13 +122,11 @@ void mostrar_nota(TiposNotas nota) {
         0x79, // G
         0xBC, // B
         0xF1, // E
-
     };
     P2OUT = (P2OUT & ~0xFD) | segmentos[nota]; // Aplicar solo a segmentos
 }
 
-
-// Devuelve la nota m·s cercana a una frecuencia dada
+// Devuelve la nota mas cercana a una frecuencia dada
 TiposNotas detectarNota(unsigned int f) {
     // Calcula la diferencia absoluta entre la frecuencia medida y la frecuencia de referencia de cada nota
     unsigned int dif0 = (f > tablaNotas[0].frequencia) ? f - tablaNotas[0].frequencia : tablaNotas[0].frequencia - f; // Diferencia con E2 (82 Hz)
@@ -131,7 +136,7 @@ TiposNotas detectarNota(unsigned int f) {
     unsigned int dif4 = (f > tablaNotas[4].frequencia) ? f - tablaNotas[4].frequencia : tablaNotas[4].frequencia - f; // Diferencia con B3 (247 Hz)
     unsigned int dif5 = (f > tablaNotas[5].frequencia) ? f - tablaNotas[5].frequencia : tablaNotas[5].frequencia - f; // Diferencia con E4 (333 Hz)
 
-    // Inicializa la variable "menor" con la primera diferencia para comparar despuÈs
+    // Inicializa la variable "menor" con la primera diferencia para comparar despues
     unsigned int menor = dif0;
 
     TiposNotas mejor = E2;
@@ -144,8 +149,6 @@ TiposNotas detectarNota(unsigned int f) {
 
     return mejor;
 }
-
-
 
 void indicarAfinacion(unsigned int freqEntrada, Notas notaRef) {
     P3OUT &= ~0x1F;
@@ -166,23 +169,19 @@ void indicarAfinacion(unsigned int freqEntrada, Notas notaRef) {
         P3OUT |= 0x02; // Muy alta
 }
 
-
-
-
-
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void TIMER0_A0_ISR(void){
     unsigned char estado_actual = (P6IN & 0x01);
 
     // Detectar flanco de subida
-    if ((estado_actual == 1) && (estado_anterior == 0)) {
-        periodo = cuenta * factor;
-        if (periodo > 0.00000)
-        frecuencia = 1 / periodo;
-        cuenta = 0;
+    if ((estado_actual == 1) && (estado_anterior == 0)) {       //en caso de flanco de subida
+        periodo = cuenta * factor;      // Calcular periodo
+        // Calcular frecuencia
+        if (periodo > 0.000000)
+        frecuencia = 1 / periodo;       // Calcular frecuencia
+        cuenta = 0;                     // Reiniciar contador
     }
-
-    estado_anterior = estado_actual;
-    cuenta++;
-    nueva_medida = 1;
+    estado_anterior = estado_actual;    // Guardar el estado actual para la siguiente interrupcion
+    cuenta++;                           // Incrementar el contador
+    nueva_medida = 1;                   // Indicar que hay una nueva medida disponible
 }
