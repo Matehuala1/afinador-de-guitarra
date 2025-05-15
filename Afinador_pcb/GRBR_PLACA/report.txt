@@ -1,0 +1,11 @@
+Plotted to 'C:\Users\juang\Desktop\uni\cuarto semestre\microcontroladores\parcial 2\Afinador_pcb\GRBR_PLACA\Afinador_pcb-F_Cu.gbr'.
+Plotted to 'C:\Users\juang\Desktop\uni\cuarto semestre\microcontroladores\parcial 2\Afinador_pcb\GRBR_PLACA\Afinador_pcb-B_Cu.gbr'.
+Plotted to 'C:\Users\juang\Desktop\uni\cuarto semestre\microcontroladores\parcial 2\Afinador_pcb\GRBR_PLACA\Afinador_pcb-F_Paste.gbr'.
+Plotted to 'C:\Users\juang\Desktop\uni\cuarto semestre\microcontroladores\parcial 2\Afinador_pcb\GRBR_PLACA\Afinador_pcb-B_Paste.gbr'.
+Plotted to 'C:\Users\juang\Desktop\uni\cuarto semestre\microcontroladores\parcial 2\Afinador_pcb\GRBR_PLACA\Afinador_pcb-F_Silkscreen.gbr'.
+Plotted to 'C:\Users\juang\Desktop\uni\cuarto semestre\microcontroladores\parcial 2\Afinador_pcb\GRBR_PLACA\Afinador_pcb-B_Silkscreen.gbr'.
+Plotted to 'C:\Users\juang\Desktop\uni\cuarto semestre\microcontroladores\parcial 2\Afinador_pcb\GRBR_PLACA\Afinador_pcb-F_Mask.gbr'.
+Plotted to 'C:\Users\juang\Desktop\uni\cuarto semestre\microcontroladores\parcial 2\Afinador_pcb\GRBR_PLACA\Afinador_pcb-B_Mask.gbr'.
+Plotted to 'C:\Users\juang\Desktop\uni\cuarto semestre\microcontroladores\parcial 2\Afinador_pcb\GRBR_PLACA\Afinador_pcb-Edge_Cuts.gbr'.
+Created Gerber job file 'C:\Users\juang\Desktop\uni\cuarto semestre\microcontroladores\parcial 2\Afinador_pcb\GRBR_PLACA\Afinador_pcb-job.gbrjob'.
+Info: Done.

@@ -48,21 +48,25 @@ Notas tablaNotas[] = {
     {E4, 333},
 };
 
-// Declaraci�n de funciones
+// Declaración de funciones
 void confg_pines(void);     // Configura los pines de lectura
-void confg_relog(void);           // Configura el temporizador
+void confg_relog(void);     // Configura el temporizador
 
 void mostrar_nota(TiposNotas nota);
 TiposNotas detectarNota(unsigned int f);
 void indicarAfinacion(unsigned int freqEntrada, Notas notaRef);
 
 // Variables globales
-float factor = 0.000004;          // Factor de conversi�n de cuentas a segundos (asume 250 kHz SMCLK)
+float factor = 0.0004;          // Factor de conversión de cuentas a segundos (100 us)
 unsigned int frecuencia = 0;      // Resultado de la frecuencia
 unsigned char estado_anterior = 1; // Estado anterior del pin
 unsigned int cuenta = 0;          // Contador de ciclos del timer
 float periodo = 0;                // Periodo medido
 unsigned char nueva_medida = 0;
+volatile unsigned int flancos = 0;
+volatile unsigned char ventana_lista = 0;
+volatile unsigned int ventana_contador = 0; // Agrega esta variable global
+volatile unsigned int debounce_counter = 0; // Global
 
 int main(void)
 {
@@ -74,16 +78,13 @@ int main(void)
     __enable_interrupt();         // Habilitar interrupciones globales
 
     while(1){
-        if (nueva_medida) {
-            nueva_medida = 0;
+        if (ventana_lista) {
+            ventana_lista = 0;
+            frecuencia = flancos * 10; // Si la ventana es de 100 ms, multiplica por 10 para Hz
+            flancos = 0;
 
-            // Detectar la nota mas cercana
             TiposNotas nota = detectarNota(frecuencia);
-
-            // Mostrar la nota en display
             mostrar_nota(nota);
-
-            // Indicar si la afinacion esta baja, precisa o alta
             indicarAfinacion(frecuencia, tablaNotas[nota]);
         }
     }
@@ -109,9 +110,9 @@ void confg_pines(void){
 }
 
 void confg_relog(void){
-    TA0CCTL0 = CCIE;                         // Habilitar interrupcion CCR0
-    TA0CCR0 = 1000 - 1;                      // Cuenta hasta 999
-    TA0CTL = TASSEL_2 | MC_1 | ID_0 | TACLR; // SMCLK, modo up, sin division
+    TA0CCTL0 = CCIE;
+    TA0CCR0 = 60; // 100 ciclos de reloj (100 us si SMCLK = 1 MHz)
+    TA0CTL = TASSEL_2 | MC_1 | ID_0 | TACLR;
 }
 
 void mostrar_nota(TiposNotas nota) {
@@ -153,36 +154,42 @@ TiposNotas detectarNota(unsigned int f) {
 void indicarAfinacion(unsigned int freqEntrada, Notas notaRef) {
     P3OUT &= ~0x1F;
 
-    unsigned char porcentaje = freqEntrada * 0.06;
-    unsigned char sostenido = notaRef.frequencia + porcentaje;
-    unsigned char bemol = notaRef.frequencia - porcentaje;
+    float margen = notaRef.frequencia * 0.06f; // 6% de la frecuencia de referencia
+    float bajo = notaRef.frequencia - margen;
+    float alto = notaRef.frequencia + margen;
 
-    if (freqEntrada < notaRef.frequencia)
-        P3OUT |= 0x01; //bemol
-    else if (freqEntrada == bemol)
-        P3OUT |= 0x04; // Leve baja
-    else if (freqEntrada == notaRef.frequencia)
-        P3OUT |= 0x10; // Afinado
-    else if (freqEntrada == sostenido)
+    if (freqEntrada < bajo)
+        P3OUT |= 0x01; // bemol (muy baja)
+    else if (freqEntrada >= bajo && freqEntrada < notaRef.frequencia)
+        P3OUT |= 0x04; // leve baja (bemol)
+    else if (freqEntrada >= notaRef.frequencia && freqEntrada <= alto)
         P3OUT |= 0x08; // sostenido
+    else if (freqEntrada > alto)
+        P3OUT |= 0x02; // muy alta
     else
-        P3OUT |= 0x02; // Muy alta
+        P3OUT |= 0x10; // afinado (exacto)
 }
 
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void TIMER0_A0_ISR(void){
     unsigned char estado_actual = (P6IN & 0x01);
 
-    // Detectar flanco de subida
-    if ((estado_actual == 1) && (estado_anterior == 0)) {       //en caso de flanco de subida
-        periodo = cuenta * factor;      // Calcular periodo
-        // Calcular frecuencia
-        if (periodo > 0.000000)
-        frecuencia = 1 / periodo;       // Calcular frecuencia
-        cuenta = 0;                     // Reiniciar contador
-        nueva_medida = 1;               // Indicar que hay una nueva medida disponible
+    // Incrementa el contador de debounce
+    if (debounce_counter < 65535) debounce_counter++;
 
+    // Detectar flanco de subida con debounce
+    if ((estado_actual == 1) && (estado_anterior == 0)) {
+        if (debounce_counter > 10) { // 10*100us = 1ms mínimo entre flancos
+            flancos++;
+            debounce_counter = 0;
+        }
     }
-    estado_anterior = estado_actual;    // Guardar el estado actual para la siguiente interrupcion
-    cuenta++;                           // Incrementar el contador
+    estado_anterior = estado_actual;
+
+    // Ventana de 100 ms (1000 interrupciones de 100 us)
+    ventana_contador++;
+    if (ventana_contador >= 1000) {
+        ventana_lista = 1;
+        ventana_contador = 0;
+    }
 }
